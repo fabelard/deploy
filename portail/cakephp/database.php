@@ -62,8 +62,8 @@ class DATABASE_CONFIG {
 	public $default = array(
 		'datasource' => 'Database/Mysql',
 		'persistent' => false,
-		'host' => '{db_host}',
-		'login' => '{db_login}',
+		'host' => 'localhost',
+		'login' => 'mnesysapp',
 		'password' => '{db_password}',
 		'database' => 'mnesys_portail',
 		'prefix' => '',
@@ -73,8 +73,8 @@ class DATABASE_CONFIG {
 	public $datas = array(
 		'datasource' => 'Database/Mysql',
 		'persistent' => false,
-		'host' => '{db_host}',
-		'login' => '{db_login}',
+		'host' => 'localhost',
+		'login' => 'mnesysapp',
 		'password' => '{db_password}',
 		'database' => 'mnesys_portail_datas',
 		'prefix' => '',
