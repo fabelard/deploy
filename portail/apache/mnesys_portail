@@ -1,0 +1,32 @@
+<VirtualHost *:80>
+        ServerAdmin webmaster@localhost
+        ServerName {apache_server_name}
+        ServerAlias *.{apache_server_name}
+	
+        DocumentRoot /home/www/inao/mnesys_portail/current/app
+
+       #<Location /medias/>
+       #        ProxyPass http://secure.mnesys-portail.fr/webroot/medias/
+       #</Location>
+
+        <Proxy *>
+            Order deny,allow
+            Allow from all
+        </Proxy>
+
+        ProxyVia On
+
+        <Directory />
+            Options Indexes FollowSymLinks MultiViews
+            AllowOverride All
+            Order allow,deny
+            allow from all
+        </Directory>
+
+        RewriteEngine on
+        RewriteCond %{HTTP_HOST} ^secure.{apache_server_name}$
+        RewriteRule ^/$ http://secure.{apache_server_name}/naoadmin/ [R=301,L]
+        RewriteCond %{HTTP_HOST} ^private.{apache_server_name}$
+        RewriteRule ^/$ http://private.{apache_server_name}/manager/ [R=301,L]
+
+</VirtualHost>
