@@ -2,6 +2,7 @@
         ServerAdmin webmaster@localhost
         ServerName {apache_server_name}
         ServerAlias *.{apache_server_name}
+        #ajouter les autres adresse après le ServerAlias pour plusieurs instances
 	
         DocumentRoot /home/www/inao/mnesys_portail/current/app
 
@@ -16,7 +17,7 @@
 
         ProxyVia On
 
-        <Directory />
+        <Directory /home/www/inao/mnesys_portail/current/app>
             Options Indexes FollowSymLinks MultiViews
             AllowOverride All
             Order allow,deny
