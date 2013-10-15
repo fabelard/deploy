@@ -1,0 +1,137 @@
+#!/bin/bash
+
+#AVANT DE LANCER LE SCRIPT !!!!!
+#Génération de la clé SSH
+#ssh-keygen -t rsa - (sans passphrase)
+#Copier le résultat dans GITHUB
+
+
+apt-get update
+apt-get upgrade
+
+#Outils indispensable avant le début de l'installation
+apt-get install -y vim ssh rsync unzip
+
+#Mise en place des sources list pour PHP5 et MYSQL
+
+APTSOURCE="/etc/apt/sources.list"
+LSBRELEASE=`lsb_release -s -c`
+
+echo "deb http://packages.dotdeb.org $LSBRELEASE all" >> $APTSOURCE
+echo "deb-src http://packages.dotdeb.org $LSBRELEASE all" >> $APTSOURCE
+
+if test $LSBRELEASE = "squeeze"
+then 
+	echo "deb http://packages.dotdeb.org squeeze-php54 all" >> $APTSOURCE
+	echo "deb-src http://packages.dotdeb.org squeeze-php54 all" >> $APTSOURCE
+#else
+#	echo "deb http://packages.dotdeb.org wheezy-php55 all" >> $APTSOURCE
+#	echo "deb-src http://packages.dotdeb.org wheezy-php55 all" >> $APTSOURCE
+fi
+
+wget http://www.dotdeb.org/dotdeb.gpg
+apt-key add dotdeb.gpg
+
+apt-get update
+apt-get upgrade
+
+
+Installation des outils nécessaire à portail V2
+apt-get install -y git-core mysql-server mysql-client apache2 apache2-doc php5 php5-cli php5-mysql php5-common php5-mcrypt php5-gd php5-curl php5-xcache libapache2-mod-php5 perl libapache2-mod-perl2 python libapache2-mod-python phpmyadmin libjpeg62 imagemagick ffmpeg
+
+#Installation de redis Server
+apt-get install -y redis-server php5-redis
+#A voir pour la mise en place de l'administration de redis (sytème de cache)
+
+#Installation de capistano
+apt-get install -y build-essential ruby rubygems
+gem install capistrano -v 2.13.5
+gem install capistrano_rsync_with_remote_cache
+
+
+#Installation de nodeJS
+apt-get install -y g++ make
+cd /tmp
+wget -N http://nodejs.org/dist/node-latest.tar.gz
+tar xzvf node-latest.tar.gz && cd node-v*
+./configure
+make
+make install
+rm -fr /tmp/node-v*
+cd /
+
+#Mise en place de l'environnement
+mkdir -p /home/www/inao/capistrano
+
+# droits
+chmod -R 2775 /home/www
+chown -R www-data:www-data /home/www
+
+#Mise en place de capitrano
+cd /home/www/inao/capistrano && capify .
+cd /home/www/inao/capistrano/config
+
+#Récuperation du fichier deploy sur git
+mv deploy.rb deploy.rb.old
+wget https://raw.github.com/naonedsystemes/deploy/master/portail/deploy.rb
+
+#Paramétrage du fichier de déploiement
+echo -n "Chemin lequel les données medias seront stockés (image, fichier xml ect...): "
+read datas_mnesys_portail
+sed -i /home/www/inao/capistrano/config/deploy.rb -e s,{inao_datas_mnesys_portail},$datas_mnesys_portail,g
+
+mkdir "$datas_mnesys_portail/medias/customer_1"
+mkdir "$datas_mnesys_portail/uploads/customer_1"
+
+#Initiation du projet
+cd /home/www/inao/capistrano && cap deploy:setup
+
+#Mise en place des fichiers nécessaire au fonctionnement de l'application
+cd /home/www/inao/mnesys_portail/shared && wget https://raw.github.com/naonedsystemes/deploy/master/portail/cakephp/core.php
+cd /home/www/inao/mnesys_portail/shared && wget https://raw.github.com/naonedsystemes/deploy/master/portail/cakephp/database.php
+
+
+#Création des bases de données et de son utilisateurs
+dbhost="localhost"
+dbuser="mnesysapp"
+
+echo -n "Base de données [root password]: "
+read datas_db_root_password
+echo -n "Base de données ['mnesysapp' user password]: "
+read datas_db_password
+ 
+dbmnesysportail="create database mnesys_portail;GRANT ALL PRIVILEGES ON mnesys_portail.* TO $dbuser@$dbhost IDENTIFIED BY '$datas_db_password';FLUSH PRIVILEGES;"
+mysql -u root -p$datas_db_root_password -e "$dbmnesysportail"
+
+dbmnesysportaildatas="create database mnesys_portail_datas;GRANT ALL PRIVILEGES ON mnesys_portail_datas.* TO $dbuser@$dbhost IDENTIFIED BY '$datas_db_password';FLUSH PRIVILEGES;"
+mysql -u root -p$datas_db_root_password -e "$dbmnesysportaildatas"
+
+sed -i /home/www/inao/mnesys_portail/shared/database.php -e s,{db_password},$datas_db_password,g
+
+#Configuration de apache2
+echo -n "Url de votre application (elle sera utisé pour l'administration du site): "
+read datas_apache_server_name
+
+cd /etc/apache2/sites-available && wget https://raw.github.com/naonedsystemes/deploy/master/portail/apache/mnesys_portail
+sed -i /etc/apache2/sites-available/mnesys_portail -e s,{apache_server_name},$datas_apache_server_name,g
+a2enmod rewrite
+a2enmod proxy
+a2ensite mnesys_portail
+
+#Mettre à jour les fichiers php.ini
+sed -i /etc/php5/cli/php.ini -e s,";date.timezone =","date.timezone = Europe/Paris",g
+sed -i /etc/php5/apache2/php.ini -e s,";date.timezone =","date.timezone = Europe/Paris",g
+sed -i /etc/php5/apache2/php.ini -e s,"upload_max_filesize = 2M","upload_max_filesize = 200M",g
+sed -i /etc/php5/apache2/php.ini -e s,"post_max_size = 8M","post_max_size = 200M",g
+
+#Effectuer le déploiement
+cd /home/www/inao/capistrano && cap deploy
+
+#Création du lien symbolique vers le script de preprocess
+ln -s /home/www/inao/mnesys_portail/current/tools/nao_jpeg_preprocess-linux64.cgi /usr/bin/nao_jpeg_preprocess
+
+#Lancement du serveur node
+cd /var/log && nohup node server /home/www/inao/mnesys_portail/current/tools/script_server/server.js &
+
+#Redémarrer le service Apache
+service apache2 restart
