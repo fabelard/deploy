@@ -36,7 +36,7 @@ apt-get update
 apt-get upgrade
 
 
-Installation des outils nécessaire à portail V2
+#Installation des outils nécessaire à portail V2
 apt-get install -y git-core mysql-server mysql-client apache2 apache2-doc php5 php5-cli php5-mysql php5-common php5-mcrypt php5-gd php5-curl php5-xcache libapache2-mod-php5 perl libapache2-mod-perl2 python libapache2-mod-python phpmyadmin libjpeg62 imagemagick ffmpeg
 
 #Installation de redis Server
