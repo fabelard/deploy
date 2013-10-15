@@ -55,6 +55,7 @@ namespace (:deploy) do
     ca.symlinks
     ca.cc
     ca.rights
+    ca.migrations
     ca.acl
     system 'cap apache:reload'
   end
@@ -95,6 +96,12 @@ namespace (:ca) do
     run "cd #{current_path} && chown www-data:www-data -R *;"
   end
 
+ desc <<-DESC
+    Run the "cake Migrations" task
+  DESC
+  task :migrations do
+    run "cd #{current_path}/#{cake_app} && ./Console/cake Migrations.migration run all;"
+  end
 
   desc <<-DESC
     Create symlink to cakephp specific targets
