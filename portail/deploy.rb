@@ -126,8 +126,8 @@ namespace (:ca) do
     #run "ln -s {inao_datas_mnesys_portail}/medias #{current_path}/app/webroot/medias"
 
     # symlink to copy_instance
-    run "rm -rf #{current_path}/tools/copy_instance.sh"
-    run "ln -s #{shared_path}/tools/copy_instance.sh #{current_path}/tools/copy_instance.sh"
+    #run "rm -rf #{current_path}/tools/copy_instance.sh"
+    #run "ln -s #{shared_path}/tools/copy_instance.sh #{current_path}/tools/copy_instance.sh"
      
   end
 
