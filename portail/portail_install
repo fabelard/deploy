@@ -80,8 +80,8 @@ echo -n "Chemin lequel les données medias seront stockés (image, fichier xml e
 read datas_mnesys_portail
 sed -i /home/www/inao/capistrano/config/deploy.rb -e s,{inao_datas_mnesys_portail},$datas_mnesys_portail,g
 
-mkdir "$datas_mnesys_portail/medias/customer_1"
-mkdir "$datas_mnesys_portail/uploads/customer_1"
+mkdir -p "$datas_mnesys_portail/medias/customer_1"
+mkdir -p "$datas_mnesys_portail/uploads/customer_1"
 
 #Initiation du projet
 cd /home/www/inao/capistrano && cap deploy:setup
