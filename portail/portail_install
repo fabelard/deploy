@@ -5,6 +5,18 @@
 #ssh-keygen -t rsa - (sans passphrase)
 #Copier le résultat dans GITHUB
 
+if [ -f ~/.ssh/id_rsa.pub ]
+then
+	echo "Clé SSH: "
+    cat ~/.ssh/id_rsa.pub
+	echo "Appuyer la touche <Entrée> pour commencer l'installation ou <CTRL> + <C> pour annuler..."
+	read touche
+else
+	echo "Aucune clé SSH de généré"
+	echo "Veuillez executer: ssh-keygen -t rsa"
+    exit 0;
+fi
+
 
 apt-get update
 apt-get upgrade
@@ -62,6 +74,7 @@ cd /
 
 #Mise en place de l'environnement
 mkdir -p /home/www/inao/capistrano
+mkdir -p /home/www/inao/server
 
 # droits
 chmod -R 2775 /home/www
@@ -76,7 +89,7 @@ mv deploy.rb deploy.rb.old
 wget https://raw.github.com/naonedsystemes/deploy/master/portail/deploy.rb
 
 #Paramétrage du fichier de déploiement
-echo -n "Chemin lequel les données medias seront stockés (image, fichier xml ect...): "
+echo -n "Chemin vers lequel les données medias seront stockés (image, fichier xml ect...): "
 read datas_mnesys_portail
 sed -i /home/www/inao/capistrano/config/deploy.rb -e s,{inao_datas_mnesys_portail},$datas_mnesys_portail,g
 
@@ -89,7 +102,6 @@ cd /home/www/inao/capistrano && cap deploy:setup
 #Mise en place des fichiers nécessaire au fonctionnement de l'application
 cd /home/www/inao/mnesys_portail/shared && wget https://raw.github.com/naonedsystemes/deploy/master/portail/cakephp/core.php
 cd /home/www/inao/mnesys_portail/shared && wget https://raw.github.com/naonedsystemes/deploy/master/portail/cakephp/database.php
-
 
 #Création des bases de données et de son utilisateurs
 dbhost="localhost"
@@ -131,7 +143,8 @@ cd /home/www/inao/capistrano && cap deploy
 ln -s /home/www/inao/mnesys_portail/current/tools/nao_jpeg_preprocess-linux64.cgi /usr/bin/nao_jpeg_preprocess
 
 #Lancement du serveur node
-cd /var/log && nohup node server /home/www/inao/mnesys_portail/current/tools/script_server/server.js &
+cd /home/www/inao/server && npm install express
+nohup node server.js &
 
 #Redémarrer le service Apache
 service apache2 restart
