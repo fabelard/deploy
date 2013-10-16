@@ -124,6 +124,10 @@ namespace (:ca) do
     run "rm -rf #{current_path}/app/webroot/medias"
     run "ln -s /home/www/inao/medias #{current_path}/app/webroot/medias"
     #run "ln -s {inao_datas_mnesys_portail}/medias #{current_path}/app/webroot/medias"
+    
+    # symlink to node server
+    run "rm -f /home/www/inao/server/server.js"
+    run "ln -s #{current_path}/tools/script_server/server.js /home/www/inao/server/server.js"
 
     # symlink to copy_instance
     #run "rm -rf #{current_path}/tools/copy_instance.sh"
