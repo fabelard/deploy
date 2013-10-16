@@ -143,7 +143,7 @@ cd /home/www/inao/capistrano && cap deploy
 ln -s /home/www/inao/mnesys_portail/current/tools/nao_jpeg_preprocess-linux64.cgi /usr/bin/nao_jpeg_preprocess
 
 #Lancement du serveur node
-cd /home/www/inao/server && npm install express
+cd /home/www/inao/mnesys_portail/current/tools/script_server && npm install express
 nohup node server.js &
 
 #Redémarrer le service Apache
